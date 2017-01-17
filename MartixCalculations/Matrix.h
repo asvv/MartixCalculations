@@ -29,12 +29,13 @@ public:
 	
 	void Add(T&, unsigned int, unsigned int);
 	void Add(T&);
+	void Replace(T&, unsigned int, unsigned int);
 	void SetRowCount(unsigned int);
 	void SetColumnCount(unsigned int);
 	void SetSize(unsigned int, unsigned int);
 
-	Matrix<T>& Inverse() const;
-	int Determinant();
+	Matrix<double> Inverse();
+	T Determinant();
 
 	const int ElementsCount() const;
 
@@ -63,7 +64,7 @@ public:
 			{
 				T x;
 				_in >> x;
-				_m.Add(x);
+				_m(i,j) = x;
 			}
 		}
 		return _in;
@@ -76,8 +77,9 @@ public:
 		{
 			for (auto j = 0; j < _m.GetColumnCount(); j++)
 			{
-				out << _m.GetDataAt(i, j);
+				out << _m.GetDataAt(i, j)<<" ";
 			}
+			std::cout << std::endl;
 		}
 
 		return out;
@@ -91,22 +93,59 @@ private:
 	unsigned int RowCount;
 	unsigned int ColumnCount;
 	std::vector<T> Data;
-
-	private int CalculateDeterminant(std::vector<T>);
+    T CalculateDeterminant(Matrix<T>&,unsigned int);
+	Matrix<T> GetCoFactor(unsigned int, unsigned int);
+	Matrix<T> GetAdjont();
 
 
 };
 
 template<typename T>
-inline int Matrix<T>::Determinant()
+inline Matrix<double> Matrix<T>::Inverse()
+{
+	int N = ColumnCount;
+	Matrix<double> ret(RowCount,ColumnCount);
+	T det = Determinant();
+	if (det == 0)
+	{
+		std::cerr<< "Singular matrix, can't find its inverse";
+		return Matrix<double>();
+	}
+
+	//Matrix<T> adj(GetAdjont());
+	auto adj = GetAdjont();
+	
+	for (int i = 0; i<N; i++)
+		for (int j = 0; j<N; j++)
+			ret(i,j) = adj(i,j) / double(det);
+
+
+
+
+	return ret;
+	// TODO: insert return statement here
+}
+
+template<typename T>
+inline T Matrix<T>::Determinant()
 {
 	int ret = 0;
+	
+	if (this->ColumnCount != this->RowCount)
+	{
+		std::cerr << "Cannot calculate determinant of non-square matrix";
+		return ret;
+	}
+	
 
 
 
 
 
 
+	int dim = ColumnCount;
+	ret = CalculateDeterminant(*this, dim);
+	auto a = 0;
 	return ret;
 }
 
@@ -131,37 +170,40 @@ inline const unsigned int Matrix<T>::GetRowCount() const
 template<typename T>
 inline const T & Matrix<T>::operator()(unsigned int _r, unsigned int _c) const
 {
-	T ret = NULL;
+	
 
 	if (_c > ColumnCount || _r > RowCount)
 	{
-		std::cerr << "out of bounds";
+		std::cerr << "out of bounds const ";
+		T ret = NULL;
+		return ret;
 	}
 	else
 	{
-		ret = Data[_r*ColumnCount + _c];
+		return = Data[_r*ColumnCount + _c];
 	}
 
 
-	return ret;
+	//return ret;
 }
 
 template<typename T>
-inline T & Matrix<T>::operator()(unsigned int _r, unsigned int _c)
+inline T&  Matrix<T>::operator()(unsigned int _r, unsigned int _c)
 {
-	T ret = NULL;
+	
 
 	if (_c > ColumnCount || _r > RowCount)
 	{
-		std::cerr << "out of bounds";
+		std::cerr << "out of bounds normal ";
+		T ret = NULL;
+		return ret;
 	}
 	else
 	{
-		ret = Data[_r*ColumnCount + _c];
+		return Data[_r*ColumnCount + _c];
 	}
 
-
-	return ret;
+	
 }
 
 template<typename T>
@@ -201,11 +243,159 @@ inline std::vector<T>& Matrix<T>::operator()(unsigned int _r)
 }
 
 template<typename T>
+inline T Matrix<T>::CalculateDeterminant(Matrix<T>& _m,unsigned int dim)
+{
+	T ret= 0;
+	//int dim = _m.ElementsCount();
+	unsigned int x = 0;
+	unsigned int y = 0;
+	int flag = 1;
+
+	if (dim == 1)
+		ret = _m(0, 0);
+		//return _m(0, 0);
+	else if (dim == 2)
+	{
+		T a = _m(0, 0);
+		T b = _m(1, 1);
+		T c = _m(0, 1);
+		T d = _m(1, 0);
+		ret = a*b - c*d;
+		 
+	}
+	else
+	{
+		Matrix<T> temp(_m);
+		
+		for (auto k = 0; k < dim; k++)
+		{
+			for (auto i = 0; i < dim; i++)
+			{
+				for (auto j = 0; j < dim; j++)
+				{
+					temp(i, j) = 0;
+					if ((i != 0) && (j != k))
+					{
+						T item = _m(i, j);
+						temp(x, y) = item;
+
+						if (y < (dim - 2))
+						{
+							y++;
+						}
+						else
+						{
+
+							y = 0;
+							x++;
+						}
+
+
+					}
+				}
+				
+			}
+
+			T tmp = _m(0, k);
+			T tmp2 =  CalculateDeterminant(temp, dim - 1);
+			ret += (flag*(tmp * tmp2));
+
+			flag *= -1;
+			x = 0;
+			y = 0;
+
+		}
+
+
+
+	}
+	auto a = ret;
+	return ret;
+}
+
+template<typename T>
+inline Matrix<T> Matrix<T>::GetCoFactor(unsigned int _r, unsigned int _c)
+{
+	Matrix<T> ret(RowCount, ColumnCount);
+	unsigned int p = 0;
+	unsigned int q = 0;
+
+	for (int i = 0; i < RowCount; i++)
+	{
+		for (int j = 0; j < ColumnCount; j++)
+		{
+			//  Copying into temporary matrix only those element
+			//  which are not in given row and column
+			if (i != _r && j != _c)
+			{
+				
+				ret(p,q++) = GetDataAt(i,j);
+				//auto u = ret(p, q);
+				// Row is filled, so increase row index and
+				// reset col index
+				if (q == ColumnCount - 1)
+				{
+					q = 0;
+					p++;
+				}
+			}
+		}
+	}
+
+
+
+	auto v = ret;
+	int yq = 0;
+	return v;
+}
+
+template<typename T>
+inline Matrix<T> Matrix<T>::GetAdjont()
+{
+	int N = ColumnCount;
+
+	Matrix<T> adj(RowCount, ColumnCount);
+	if (ColumnCount == 1)
+	{
+		adj(0, 0) = 1;
+	}
+
+
+	int sign = 1;
+	for (int i = 0; i<N; i++)
+	{
+		for (int j = 0; j<N; j++)
+		{
+			
+            Matrix<T> temp=GetCoFactor(i, j);
+			sign = ((i + j) % 2 == 0) ? 1 : -1;
+			auto det = CalculateDeterminant(temp, N - 1);
+			
+			adj(j,i) = (sign)*(det);
+		}
+	}
+
+
+
+
+
+
+
+
+	auto w = adj;
+	auto n = 0;
+	return adj;
+	// TODO: insert return statement here
+}
+
+
+
+template<typename T>
 inline Matrix<T>::Matrix():
 	ColumnCount(0),
 	RowCount(0)
 {
-	Data.resize(0);
+	//Data.resize(0);
 }
 
 template<typename T>
@@ -229,7 +419,12 @@ inline Matrix<T>& Matrix<T>::operator=(const Matrix & _m)
 {
 	ColumnCount = _m.ColumnCount;
 	RowCount = _m.RowCount;
-	Data = _m.Data;
+	Data.resize(_m.ElementsCount());
+	for (int i = 0; i < _m.ElementsCount(); i++)
+	{
+		Data[i] = _m.Data[i];
+	}
+
 
 	return *this;
 }
@@ -254,20 +449,19 @@ inline std::vector<T>& Matrix<T>::GetData()
 template<typename T>
 inline const T & Matrix<T>::GetDataAt(unsigned int _r, unsigned int _c) const
 {
-	T ret = NULL;
+	
 
 	if (_c > ColumnCount || _r > RowCount)
 	{
 		std::cerr << "out of bounds";
+        T ret = NULL;
+		return ret;
 	}
 	else
 	{
-		ret = Data[_r*ColumnCount+_c];
+		return Data[_r*ColumnCount+_c];
 	}
 
-
-	return ret;
-	
 
 }
 
@@ -292,19 +486,21 @@ inline const std::vector<T>& Matrix<T>::GetDataAt(unsigned int _r) const
 template<typename T>
 inline T & Matrix<T>::GetDataAt(unsigned int _r, unsigned int _c)
 {
-	T ret = NULL;
+	
 
 	if (_c > ColumnCount || _r > RowCount)
 	{
 		std::cerr << "out of bounds";
+        T ret = NULL;
+        return ret;
 	}
 	else
 	{
-		ret = Data[_r*ColumnCount + _c];
+		return Data[_r*ColumnCount + _c];
 	}
 
 
-	return ret;
+	
 }
 
 template<typename T>
@@ -340,17 +536,23 @@ inline void Matrix<T>::Add(T & item)
 }
 
 template<typename T>
+inline void Matrix<T>::Replace(T & item, unsigned int _r, unsigned int _c)
+{
+	GetDataAt(_r, _c) = item;
+}
+
+template<typename T>
 inline void Matrix<T>::SetRowCount(unsigned int _r)
 {
 	RowCount = _r;
-	this->Data.resize(ColumnCount * RowCount);
+	//this->Data.resize(ColumnCount * RowCount);
 }
 
 template<typename T>
 inline void Matrix<T>::SetColumnCount(unsigned int _c)
 {
 	ColumnCount = _c;
-	this->Data.resize(ColumnCount * RowCount);
+	//this->Data.resize(ColumnCount * RowCount);
 
 }
 
