@@ -39,6 +39,7 @@ public:
 
 	Matrix<T> Transpose();
 
+	Matrix<T> Solve(const Matrix<T>&);
 
 	Matrix<double> Inverse();
 	T Determinant();
@@ -619,6 +620,19 @@ inline Matrix<T> Matrix<T>::Transpose()
 		}
 
 	return ret;
+}
+
+template<typename T>
+inline Matrix<T> Matrix<T>::Solve(const Matrix<T>& _res)
+{
+	//Matrix<T> ret(_res.RowCount, 1);
+
+	Matrix<T> ret = Multiply(Transpose());
+	ret = ret.Inverse();
+	ret = ret * Transpose();
+	ret = ret * _res;
+	
+	return _res;
 }
 
 
