@@ -34,6 +34,12 @@ public:
 	void SetColumnCount(unsigned int);
 	void SetSize(unsigned int, unsigned int);
 
+	Matrix<T> Multiply(Matrix<T>&);
+	Matrix<T> Multiply(T);
+
+	Matrix<T> Transpose();
+
+
 	Matrix<double> Inverse();
 	T Determinant();
 
@@ -562,6 +568,57 @@ inline void Matrix<T>::SetSize(unsigned int _r, unsigned int _c)
 	this->SetRowCount(_r);
 	this->SetColumnCount(_c);
 
+}
+
+template<typename T>
+inline Matrix<T> Matrix<T>::Multiply(Matrix<T>& _m)
+{
+	Matrix<T> ret(RowCount,_m.ColumnCount);
+	if (ColumnCount != _m.RowCount())
+	{
+		std::cerr << "Error! column of first matrix not equal to row of second. ";
+	
+    }
+	else
+	{
+		for (i = 0; i < RowCount; ++i)
+			for (j = 0; j < _m.ColumnCount; ++j)
+				for (k = 0; k < ColumnCount; ++k)
+				{
+					ret(i, j) += GetDataAt(i, k) * _m(k, j);
+				}
+	}
+
+
+		return ret;
+}
+
+template<typename T>
+inline Matrix<T> Matrix<T>::Multiply(T _val)
+{
+	Matrix<T> ret(RowCount,ColumnCount);
+
+	for (auto i = 0; i < RowCount; i++)
+		for (auto j = 0; j < ColumnCount; j++)
+		{
+			ret(i, j) = GetDataAt(i, j) * _val;
+		}
+	
+		 
+	return ret;
+}
+
+template<typename T>
+inline Matrix<T> Matrix<T>::Transpose()
+{
+	Matrix<T> ret(ColumnCount,RowCount);
+	for(auto i = 0 ; i < RowCount ; i++)
+		for (auto j = 0; j < ColumnCount; j++)
+		{
+			ret(j, i) = GetDataAt(i, j);
+		}
+
+	return ret;
 }
 
 
