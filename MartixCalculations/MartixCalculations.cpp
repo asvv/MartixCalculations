@@ -11,7 +11,8 @@ int main()
 
 	
 	
-	Matrix<int> test(3,3);
+	Matrix<int> test(5,3);
+	Matrix<int> res(5, 1);
    
 	std::fstream file;
 	file.open("data.txt");
@@ -24,14 +25,27 @@ int main()
 	{
 	std::cerr << "B³¹d otwarcia pliku";
 	}
+	file.close();
+
+	file.open("results.txt");
+	if (file.good())
+	{
+		file >> res;
+
+	}
+	else
+	{
+		std::cerr << "B³¹d otwarcia pliku";
+	}
+	file.close();
 	//std::cin >> test;
 	
 	//test << 5;
 
 
 	
-	auto o = test.Inverse();
-	std::cout << o;
+	
+	std::cout << test.Solve(res);
 
 	
     

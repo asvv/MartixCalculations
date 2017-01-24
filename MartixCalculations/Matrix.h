@@ -15,9 +15,51 @@ public:
 	Matrix(unsigned int, unsigned int);
 #pragma endregion
 
-	Matrix<T>& operator=(const Matrix&);
-    ~Matrix();
+    Matrix<T>& operator=(const Matrix<T>&);
 
+	//Matrix<T>& operator*(const Matrix<T>& _m)
+	//{
+	//	return Multiply(_m);
+	//}
+
+	//template<typename T2 = double>
+	operator Matrix<double>()
+	{
+		Matrix<double> u(RowCount, ColumnCount);
+
+		for (int i = 0; i < u.GetRowCount(); i++)
+		{
+
+			for (int j = 0; j < u.GetColumnCount(); j++)
+			{
+				u(i, j) = (double)GetDataAt(i, j);
+
+			}
+		}
+		return u;
+	}
+	//operator const Matrix<double>()
+	//{
+	//	Matrix<double> u(RowCount, ColumnCount);
+
+	//	for (int i = 0; i < u.GetRowCount(); i++)
+	//	{
+
+	//		for (int j = 0; j < u.GetColumnCount(); j++)
+	//		{
+	//			u(i, j) = (double)GetDataAt(i, j);
+
+	//		}
+	//	}
+	//}
+
+
+	
+
+
+
+    ~Matrix();
+ 
 	const std::vector<T>& GetData() const;
 	std::vector<T>& GetData();
 
@@ -34,16 +76,21 @@ public:
 	void SetColumnCount(unsigned int);
 	void SetSize(unsigned int, unsigned int);
 
-	Matrix<T> Multiply(Matrix<T>&);
-	Matrix<T> Multiply(T);
+    Matrix<double> Solve(Matrix&);
+
+
+	Matrix<T> Multiply(const Matrix<T>&);
+	//Matrix<T> Multiply(T);
 
 	Matrix<T> Transpose();
 
-	Matrix<T> Solve(const Matrix<T>&);
+	
 
 	Matrix<double> Inverse();
+
 	T Determinant();
 
+   
 	const int ElementsCount() const;
 
 	const unsigned int GetColumnCount() const;
@@ -106,6 +153,7 @@ private:
 
 
 };
+
 
 template<typename T>
 inline Matrix<double> Matrix<T>::Inverse()
@@ -187,7 +235,7 @@ inline const T & Matrix<T>::operator()(unsigned int _r, unsigned int _c) const
 	}
 	else
 	{
-		return = Data[_r*ColumnCount + _c];
+		return  Data[_r*ColumnCount + _c];
 	}
 
 
@@ -283,8 +331,8 @@ inline T Matrix<T>::CalculateDeterminant(Matrix<T>& _m,unsigned int dim)
 					temp(i, j) = 0;
 					if ((i != 0) && (j != k))
 					{
-						T item = _m(i, j);
-						temp(x, y) = item;
+						//T item = ;
+						temp(x, y) = _m(i, j);
 
 						if (y < (dim - 2))
 						{
@@ -303,9 +351,9 @@ inline T Matrix<T>::CalculateDeterminant(Matrix<T>& _m,unsigned int dim)
 				
 			}
 
-			T tmp = _m(0, k);
-			T tmp2 =  CalculateDeterminant(temp, dim - 1);
-			ret += (flag*(tmp * tmp2));
+			/*T tmp = _m(0, k);
+			T tmp2 =  CalculateDeterminant(temp, dim - 1);*/
+			ret += (flag*(_m(0, k) * CalculateDeterminant(temp, dim - 1)));
 
 			flag *= -1;
 			x = 0;
@@ -331,15 +379,12 @@ inline Matrix<T> Matrix<T>::GetCoFactor(unsigned int _r, unsigned int _c)
 	{
 		for (int j = 0; j < ColumnCount; j++)
 		{
-			//  Copying into temporary matrix only those element
-			//  which are not in given row and column
+			
 			if (i != _r && j != _c)
 			{
 				
 				ret(p,q++) = GetDataAt(i,j);
-				//auto u = ret(p, q);
-				// Row is filled, so increase row index and
-				// reset col index
+				
 				if (q == ColumnCount - 1)
 				{
 					q = 0;
@@ -392,7 +437,7 @@ inline Matrix<T> Matrix<T>::GetAdjont()
 	auto w = adj;
 	auto n = 0;
 	return adj;
-	// TODO: insert return statement here
+	
 }
 
 
@@ -402,19 +447,19 @@ inline Matrix<T>::Matrix():
 	ColumnCount(0),
 	RowCount(0)
 {
-	//Data.resize(0);
+	Data.resize(0);
 }
 
 template<typename T>
 inline Matrix<T>::Matrix(const Matrix & _m):
-	RowCount(_m.RowCount),
-	ColumnCount(_m.ColumnCount)
+	RowCount(_m.GetRowCount()),
+	ColumnCount(_m.GetColumnCount())
 {
-	Data = _m.Data;
+	Data = _m.GetData();
 }
 
 template<typename T>
-inline Matrix<T>::Matrix(unsigned int _c, unsigned int _r):
+inline Matrix<T>::Matrix(unsigned int _r, unsigned int _c):
 	RowCount(_r),
 	ColumnCount(_c)
 {
@@ -422,7 +467,7 @@ inline Matrix<T>::Matrix(unsigned int _c, unsigned int _r):
 }
 
 template<typename T>
-inline Matrix<T>& Matrix<T>::operator=(const Matrix & _m)
+inline Matrix<T>& Matrix<T>::operator=(const Matrix<T> & _m)
 {
 	ColumnCount = _m.ColumnCount;
 	RowCount = _m.RowCount;
@@ -435,6 +480,9 @@ inline Matrix<T>& Matrix<T>::operator=(const Matrix & _m)
 
 	return *this;
 }
+
+
+
 
 template<typename T>
 inline Matrix<T>::~Matrix()
@@ -572,19 +620,19 @@ inline void Matrix<T>::SetSize(unsigned int _r, unsigned int _c)
 }
 
 template<typename T>
-inline Matrix<T> Matrix<T>::Multiply(Matrix<T>& _m)
+inline Matrix<T> Matrix<T>::Multiply(const Matrix<T>& _m)
 {
 	Matrix<T> ret(RowCount,_m.ColumnCount);
-	if (ColumnCount != _m.RowCount())
+	if (ColumnCount != _m.RowCount)
 	{
 		std::cerr << "Error! column of first matrix not equal to row of second. ";
 	
     }
 	else
 	{
-		for (i = 0; i < RowCount; ++i)
-			for (j = 0; j < _m.ColumnCount; ++j)
-				for (k = 0; k < ColumnCount; ++k)
+		for (int i = 0; i < RowCount; ++i)
+			for (int j = 0; j < _m.ColumnCount; ++j)
+				for (int k = 0; k < ColumnCount; ++k)
 				{
 					ret(i, j) += GetDataAt(i, k) * _m(k, j);
 				}
@@ -594,20 +642,20 @@ inline Matrix<T> Matrix<T>::Multiply(Matrix<T>& _m)
 		return ret;
 }
 
-template<typename T>
-inline Matrix<T> Matrix<T>::Multiply(T _val)
-{
-	Matrix<T> ret(RowCount,ColumnCount);
-
-	for (auto i = 0; i < RowCount; i++)
-		for (auto j = 0; j < ColumnCount; j++)
-		{
-			ret(i, j) = GetDataAt(i, j) * _val;
-		}
-	
-		 
-	return ret;
-}
+//template<typename T>
+//inline Matrix<T> Matrix<T>::Multiply(T _val)
+//{
+//	Matrix<T> ret(RowCount,ColumnCount);
+//
+//	for (auto i = 0; i < RowCount; i++)
+//		for (auto j = 0; j < ColumnCount; j++)
+//		{
+//			ret(i, j) = GetDataAt(i, j) * _val;
+//		}
+//	
+//		 
+//	return ret;
+//}
 
 template<typename T>
 inline Matrix<T> Matrix<T>::Transpose()
@@ -623,17 +671,46 @@ inline Matrix<T> Matrix<T>::Transpose()
 }
 
 template<typename T>
-inline Matrix<T> Matrix<T>::Solve(const Matrix<T>& _res)
+inline Matrix<double> Matrix<T>::Solve(Matrix& _res)
 {
+	Matrix<double> ret(RowCount, ColumnCount);
+	Matrix<double> tmp = _res;
+
+	Matrix<T> w = Transpose();
+	Matrix<T> g = *this;
+	Matrix<T> res = _res;
+
+	
+
+
+	g = w.Multiply(g);
+	ret = g.Inverse();
+	ret = ret.Multiply(w);
+	ret = ret.Multiply(tmp);
+
+
+	return ret;
+
+}
+
+	/*
+
+
+
+
+
+	
+*/
 	//Matrix<T> ret(_res.RowCount, 1);
 
-	Matrix<T> ret = Multiply(Transpose());
+	/*Matrix<T> ret = Multiply(Transpose());
 	ret = ret.Inverse();
 	ret = ret * Transpose();
 	ret = ret * _res;
+	*/
+	//return ret;
 	
-	return _res;
-}
+
 
 
 
